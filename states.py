@@ -34,3 +34,8 @@ class ScheduleStates(StatesGroup):
     """Kun tartibi uchun holatlar."""
     adding_task = State()
     adding_time = State()
+
+
+class AdminStates(StatesGroup):
+    """Admin paneili uchun holatlar."""
+    waiting_for_broadcast = State()

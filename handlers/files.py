@@ -164,6 +164,20 @@ async def _handle_file_upload(message: Message, state: FSMContext, file_type: st
 
     file_id = file.file_id
 
+    from config import DB_CHANNEL_ID
+    channel_msg_id = None
+    if DB_CHANNEL_ID:
+        try:
+            # Faylni kanalga nusxalash
+            channel_msg = await message.copy_to(
+                chat_id=DB_CHANNEL_ID,
+                caption=f"📁 *Fayl yuklandi*\n\nPapka: {folder_id}\nFayl: {file_type}\n👤 #User_{user_id}",
+                parse_mode="Markdown"
+            )
+            channel_msg_id = channel_msg.message_id
+        except Exception as e:
+            logger.error(f"Faylni DB_CHANNEL ga yuborishda xatolik: {e}")
+
     # Saqlash
     db = load_data()
     if user_id in db and folder_id in db[user_id].get("folders", {}):
@@ -172,6 +186,7 @@ async def _handle_file_upload(message: Message, state: FSMContext, file_type: st
             "date": datetime.now().strftime("%d.%m.%Y"),
             "file_id": file_id,
             "type": file_type,
+            "channel_msg_id": channel_msg_id,
             "uploaded_at": datetime.now().isoformat(),
         })
         save_data(db)

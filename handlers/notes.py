@@ -124,9 +124,26 @@ async def note_content_entered(message: Message, state: FSMContext):
     if "notes" not in db[user_id]:
         db[user_id]["notes"] = {}
 
+    from config import DB_CHANNEL_ID
+    
+    # Kanalga saqlash mantig'i
+    channel_msg_id = None
+    if DB_CHANNEL_ID:
+        try:
+            channel_msg = await message.bot.send_message(
+                chat_id=DB_CHANNEL_ID,
+                text=f"📝 *{title}*\n\n{content}\n\n📅 Yaratilgan: {datetime.now().strftime('%Y-%m-%d | %H:%M')}\n👤 #User_{user_id}",
+                parse_mode="Markdown"
+            )
+            channel_msg_id = channel_msg.message_id
+        except Exception as e:
+            logger.error(f"Xatolik DB_CHANNEL_ID ga yuborishda: {e}")
+            
+    # Agar kanalga ketsa, matnni lokalda saqlash shart emas
     db[user_id]["notes"][note_id] = {
         "title": title,
-        "content": content,
+        "content": content if not channel_msg_id else "[DB Kanaliga saqlangan]", 
+        "channel_msg_id": channel_msg_id,
         "created_at": datetime.now().isoformat(),
     }
     save_data(db)
@@ -139,7 +156,7 @@ async def note_content_entered(message: Message, state: FSMContext):
     ])
 
     await message.answer(
-        f"✅ *Eslatma saqlandi!*\n\n"
+        f"✅ *Eslatma xavfsiz saqlandi!*\n\n"
         f"📝 *{title}*\n"
         f"📅 {datetime.now().strftime('%Y-%m-%d')}",
         reply_markup=kb,
@@ -167,14 +184,32 @@ async def view_note(callback: CallbackQuery):
         [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="my_notes")],
     ])
 
+    from config import DB_CHANNEL_ID
+    
+    if note.get("channel_msg_id") and DB_CHANNEL_ID:
+        try:
+            # Kanaldan to'g'ridan to'g'ri foydalanuvchiga nusxalash
+            await callback.message.bot.copy_message(
+                chat_id=user_id,
+                from_chat_id=DB_CHANNEL_ID,
+                message_id=note["channel_msg_id"],
+                reply_markup=kb,
+                parse_mode="Markdown"
+            )
+            await callback.message.delete()
+            return
+        except Exception as e:
+            logger.error(f"Eslatmani kanaldan qaytarishda xatolik: {e}")
+            pass # fallback to local content
+
+    # Agar kanalda bo'lmasa yoki ulangan bo'lmasa, o'zidagidan o'qiydi
     await callback.message.edit_text(
-        f"📝 *{note['title']}*\n\n"
-        f"{note['content']}\n\n"
+        f"📝 *{note.get('title', 'Nomsiz')}*\n\n"
+        f"{note.get('content', '')}\n\n"
         f"📅 Yaratilgan: {note.get('created_at', 'Nomalum')[:10]}",
         reply_markup=kb,
         parse_mode="Markdown",
     )
-
 
 # ==================== ESLATMA O'CHIRISH ====================
 
