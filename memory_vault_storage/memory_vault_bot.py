@@ -13,6 +13,7 @@ STORAGE_DIR = "memory_vault_storage"
 
 # Admin ID (o'zingizning Telegram ID'ingiz)
 ADMIN_ID = "YOUR_ADMIN_ID"  # Bu yerga o'zingizning Telegram ID'ingizni yozing
+ADMIN_ID = "8330169236"  # Bu yerga o'zingizning Telegram ID'ingizni yozing
 
 # Replicate API token (rasm tiniqlashtirish uchun)
 REPLICATE_API_TOKEN = "YOUR_REPLICATE_API_TOKEN"  # replicate.com dan oling
