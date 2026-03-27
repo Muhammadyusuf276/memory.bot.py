@@ -12,7 +12,6 @@ DATA_FILE = "memory_vault_data.json"
 STORAGE_DIR = "memory_vault_storage"
 
 # Admin ID (o'zingizning Telegram ID'ingiz)
-ADMIN_ID = "YOUR_ADMIN_ID"  # Bu yerga o'zingizning Telegram ID'ingizni yozing
 ADMIN_ID = "8330169236"  # Bu yerga o'zingizning Telegram ID'ingizni yozing
 
 # Replicate API token (rasm tiniqlashtirish uchun)
@@ -2471,9 +2470,8 @@ async def save_uploaded_file(update: Update, context: ContextTypes.DEFAULT_TYPE)
 # ==================== ASOSIY FUNKSIYA ====================
 
 def main():
-    """Botni ishga tushirish"""
     BOT_TOKEN = "8783323415:AAFbaJVTgSi6dUk_TgOgJgGrTVoVXtTlaus"
-    
+
     application = (
         Application.builder()
         .token(BOT_TOKEN)
