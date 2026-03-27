@@ -63,11 +63,15 @@ async def upload_to_folder(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FolderStates.uploading_file)
     await state.update_data(upload_folder_id=folder_id, upload_count=0)
 
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Yuklashni tugatish", callback_data="finish_upload")],
+        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="main_menu")],
+    ])
     await callback.message.edit_text(
         "📤 *Fayl yuklash*\n\n"
         "Endi rasm yoki video yuboring:\n"
-        "(Bir nechta fayl yuklashingiz mumkin)",
-        reply_markup=cancel_kb(),
+        "(Bir nechta fayl birdaniga yuborishingiz mumkin. Yuklab bo'lgach, pastdagi '✅ Yuklashni tugatish' tugmasini bosing)",
+        reply_markup=kb,
         parse_mode="Markdown",
     )
 
@@ -141,19 +145,6 @@ async def _handle_file_upload(message: Message, state: FSMContext, file_type: st
         )
         return
 
-    # Birinchi fayl uchun xabar
-    if upload_count == 0:
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Tugatish", callback_data="finish_upload")],
-        ])
-        await message.answer(
-            "📤 *Yuklash boshlandi...*\n\n"
-            "Rasmlar/videolaringiz yuklanmoqda.\n"
-            "Barchasini yuklab bo'lgach 'Tugatish' tugmasini bosing.",
-            reply_markup=kb,
-            parse_mode="Markdown",
-        )
-
     # Faylni olish
     if file_type == "photo":
         file = message.photo[-1]
@@ -191,6 +182,8 @@ async def _handle_file_upload(message: Message, state: FSMContext, file_type: st
         })
         save_data(db)
 
-        await state.update_data(upload_count=upload_count + 1)
+        st = await state.get_data()
+        cur_count = st.get("upload_count", 0)
+        await state.update_data(upload_count=cur_count + 1)
     else:
         await message.answer("❌ Papka topilmadi.", reply_markup=back_to_menu_kb())
