@@ -3,6 +3,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BOT_TOKEN
@@ -23,6 +24,13 @@ async def main():
         return
 
     bot = Bot(token=BOT_TOKEN)
+    
+    # Bot menyusiga komandalar qo'shish
+    await bot.set_my_commands([
+        BotCommand(command="start", description="🏠 Bosh menyu"),
+        BotCommand(command="help", description="❓ Yordam")
+    ])
+
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
