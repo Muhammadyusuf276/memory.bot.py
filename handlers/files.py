@@ -60,8 +60,10 @@ async def upload_to_folder(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     folder_id = callback.data.replace("upload_to_", "")
 
+    import uuid
+    session_id = str(uuid.uuid4())
     await state.set_state(FolderStates.uploading_file)
-    await state.update_data(upload_folder_id=folder_id, upload_count=0)
+    await state.update_data(upload_folder_id=folder_id, upload_count=0, upload_session=session_id)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Yuklashni tugatish", callback_data="finish_upload")],
@@ -144,6 +146,27 @@ async def _handle_file_upload(message: Message, state: FSMContext, file_type: st
             reply_markup=back_to_menu_kb(),
         )
         return
+
+    # Media Group orqali kanda kelganda xabarni takrorlamaslik logikasi
+    session_id = state_data.get("upload_session", "")
+    global _active_sessions
+    if "_active_sessions" not in globals():
+        _active_sessions = set()
+        
+    if session_id and session_id not in _active_sessions:
+        _active_sessions.add(session_id)
+        if len(_active_sessions) > 1000:
+            _active_sessions.clear()
+            
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Yuklashni tugatish", callback_data="finish_upload")],
+        ])
+        await message.answer(
+            "📤 *Qabul qilindi!* yuklanmoqda...\n\n"
+            "Barchasini yuklab bo'lgach 'Tugatish' tugmasini bosing.",
+            reply_markup=kb,
+            parse_mode="Markdown",
+        )
 
     # Faylni olish
     if file_type == "photo":
